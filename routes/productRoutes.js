@@ -19,7 +19,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /products:
+ * /api/products/products:
  *   get:
  *     summary: Get all products
  *     tags: [Products]
@@ -31,7 +31,7 @@ router.get("/products", getProducts);
 
 /**
  * @swagger
- * /products/{id}:
+ * /api/products/products/{id}:
  *   get:
  *     summary: Get a product by ID
  *     tags: [Products]
@@ -47,7 +47,7 @@ router.get("/products/:id", getProductById);
 
 /**
  * @swagger
- * /products:
+ * /api/products/products:
  *   post:
  *     summary: Create a new product (Admin only)
  *     tags: [Products]
@@ -65,7 +65,7 @@ router.post("/products", protect, isAdmin, createProduct);
 
 /**
  * @swagger
- * /products/{id}:
+ * /api/products/products/{id}:
  *   put:
  *     summary: Update a product (Admin only)
  *     tags: [Products]
@@ -87,7 +87,7 @@ router.put("/products/:id", protect, isAdmin, updateProduct);
 
 /**
  * @swagger
- * /products/{id}:
+ * /api/products/products/{id}:
  *   delete:
  *     summary: Delete a product (Admin only)
  *     tags: [Products]
@@ -107,7 +107,7 @@ router.delete("/products/:id", protect, isAdmin, deleteProduct);
 
 /**
  * @swagger
- * /products/search:
+ * /api/products/products/search:
  *   get:
  *     summary: Search products by name
  *     tags: [Products]
@@ -123,7 +123,7 @@ router.get("/products/search", searchProduct);
 
 /**
  * @swagger
- * /products/category:
+ * /api/products/products/category:
  *   post:
  *     summary: Get products by category
  *     tags: [Products]
@@ -137,7 +137,7 @@ router.post("/products/category", getProductByCategory);
 
 /**
  * @swagger
- * /products/pricerange:
+ * /api/products/products/pricerange:
  *   get:
  *     summary: Get products in a price range
  *     tags: [Products]
@@ -156,7 +156,7 @@ router.get("/products/pricerange", getProductsByPriceRange);
 
 /**
  * @swagger
- * /products/latest:
+ * /api/products/products/latest:
  *   get:
  *     summary: Get latest products
  *     tags: [Products]
@@ -168,7 +168,7 @@ router.get("/products/latest", getLatestProducts);
 
 /**
  * @swagger
- * /products/{id}/stock:
+ * /api/products/products/{id}/stock:
  *   patch:
  *     summary: Update stock quantity (Admin only)
  *     tags: [Products]
@@ -190,7 +190,7 @@ router.patch("/products/:id/stock", protect, isAdmin, updateStock);
 
 /**
  * @swagger
- * /products/{id}/reviews:
+ * /api/products/products/{id}/reviews:
  *   post:
  *     summary: Add product review (Authenticated users)
  *     tags: [Products]
@@ -210,7 +210,7 @@ router.post("/products/:id/reviews", protect, addProductReview);
 
 /**
  * @swagger
- * /products/{id}/reviews:
+ * /api/products/products/{id}/reviews:
  *   get:
  *     summary: Get product reviews
  *     tags: [Products]

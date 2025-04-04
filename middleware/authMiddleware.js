@@ -31,10 +31,10 @@ export const protect = async (req, res, next) => {
     }
 };
 
-export const admin = (req, res, next) => {
-    if (req.user && req.user.isAdmin) {
-        next();
-    } else {
-        res.status(401).json({ success: false, message: "Not authorized as an admin." });
+export const isAdmin = (req, res, next) => {
+    if (req.user && req.user.role === "admin") {
+      return next();
     }
-};
+    return res.status(403).json({ message: "Access denied: Admins only" });
+  };
+  

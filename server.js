@@ -7,9 +7,11 @@ import wishlistRoutes from './routes/wishlistRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import swaggerDocs from "./swagger.js";
+import cors from "cors";
 dotenv.config();
 connectDB();
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/users", userRoutes);

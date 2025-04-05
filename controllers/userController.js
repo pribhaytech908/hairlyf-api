@@ -25,36 +25,49 @@ export const registerUser = async (req, res) => {
     try {
         const { name, email, password, phoneNumber } = req.body;
 
+        if (!name || !email || !password || !phoneNumber) {
+            return res.status(400).json({ message: "All fields are required." });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^[0-9]{10}$/;
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email format." });
+        }
+
+        if (!phoneRegex.test(phoneNumber)) {
+            return res.status(400).json({ message: "Phone number must be 10 digits." });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long." });
+        }
+
         const userExists = await User.findOne({ email });
-        if (userExists) return res.status(400).json({ message: "User already exists" });
+        if (userExists) {
+            return res.status(400).json({ message: "User already exists." });
+        }
 
-        const verificationToken = crypto.randomBytes(32).toString("hex");
+        const token = jwt.sign(
+            { name, email, password, phoneNumber },
+            process.env.JWT_SECRET,
+            { expiresIn: "15m" }
+        );
 
-        const user = await User.create({
-            name,
-            email,
-            password,
-            phoneNumber,
-            verificationToken,
+        const verificationLink = `${process.env.FRONTEND_URL}/verify/${token}`;
+
+        await transporter.sendMail({
+            from: `"HairLYF" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Verify your email",
+            html: `<p>Click below to verify your email:</p>
+                   <a href="${verificationLink}">${verificationLink}</a>`,
         });
 
-        if (user) {
-            const verificationLink = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
-
-            await transporter.sendMail({
-                from: `"HairLYF" <${process.env.EMAIL_USER}>`,
-                to: user.email,
-                subject: "Email Verification",
-                html: `<p>Click the link below to verify your email:</p>
-                       <a href="${verificationLink}">${verificationLink}</a>`,
-            });
-
-            return res.status(201).json({
-                message: "Verification email sent. Please check your inbox.",
-            });
-        } else {
-            return res.status(400).json({ message: "Invalid user data" });
-        }
+        return res.status(201).json({
+            message: "Verification email sent. Please check your inbox.",
+        });
     } catch (error) {
         return res.status(500).json({ message: "Server error", error: error.message });
     }
@@ -62,22 +75,23 @@ export const registerUser = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
     try {
-      const { token } = req.params;
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      const user = await User.findOne({ email: decoded.email });
-  
-      if (!user) return res.status(400).json({ message: "User not found" });
-      if (user.isVerified) return res.json({ message: "User already verified" });
-  
-      user.isVerified = true;
-      await user.save();
-  
-      return res.json({ message: "Email verified successfully. You can now log in." });
+        const { token } = req.params;
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { name, email, password, phoneNumber } = decoded;
+
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: "User already verified." });
+        }
+
+        const user = await User.create({ name, email, password, phoneNumber });
+
+        return res.status(201).json({ message: "Email verified and user registered successfully." });
     } catch (error) {
-      return res.status(400).json({ message: "Invalid or expired token" });
+        return res.status(400).json({ message: "Invalid or expired token", error: error.message });
     }
-  };
+};
   
 
 export const loginUser = async (req, res) => {

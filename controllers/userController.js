@@ -77,7 +77,7 @@ export const verifyEmail = async (req, res) => {
     try {
         const { token } = req.params;
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(decodeURIComponent(token), process.env.JWT_SECRET);
         const { name, email, password, phoneNumber } = decoded;
 
         const userExists = await User.findOne({ email });

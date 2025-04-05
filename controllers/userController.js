@@ -62,20 +62,23 @@ export const registerUser = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
     try {
-        const { token } = req.params;
-        const user = await User.findOne({ verificationToken: token });
-
-        if (!user) return res.status(400).json({ message: "Invalid or expired token" });
-
-        user.isVerified = true;
-        user.verificationToken = undefined;
-        await user.save();
-
-        return res.json({ message: "Email verified successfully. You can now log in." });
+      const { token } = req.params;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      const user = await User.findOne({ email: decoded.email });
+  
+      if (!user) return res.status(400).json({ message: "User not found" });
+      if (user.isVerified) return res.json({ message: "User already verified" });
+  
+      user.isVerified = true;
+      await user.save();
+  
+      return res.json({ message: "Email verified successfully. You can now log in." });
     } catch (error) {
-        return res.status(500).json({ message: "Server error", error: error.message });
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
-};
+  };
+  
 
 export const loginUser = async (req, res) => {
     try {

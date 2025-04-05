@@ -4,7 +4,6 @@ import {
   loginUser,
   getUserProfile,
   updateUserProfile,
-  verifyEmail,
   forgotPassword,
   resetPassword,
 } from "../controllers/userController.js";
@@ -40,23 +39,6 @@ const router = express.Router();
  */
 router.post("/register", registerUser);
 
-/**
- * @swagger
- * /api/users/verify/{token}:
- *   get:
- *     summary: Verify user email
- *     tags: [Auth]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Email verified successfully
- */
-router.get("/verify/:token", verifyEmail);
 
 /**
  * @swagger

@@ -7,12 +7,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Generate JWT Token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
 
-// Configure Nodemailer
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -23,76 +21,81 @@ const transporter = nodemailer.createTransport({
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password, phoneNumber } = req.body;
-
-        if (!name || !email || !password || !phoneNumber) {
-            return res.status(400).json({ message: "All fields are required." });
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[0-9]{10}$/;
-
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: "Invalid email format." });
-        }
-
-        if (!phoneRegex.test(phoneNumber)) {
-            return res.status(400).json({ message: "Phone number must be 10 digits." });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters long." });
-        }
-
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: "User already exists." });
-        }
-
-        const token = jwt.sign(
-            { name, email, password, phoneNumber },
-            process.env.JWT_SECRET,
-            { expiresIn: "15m" }
-        );
-
-        const verificationLink = `${process.env.FRONTEND_URL}/verify/${token}`;
-
-        await transporter.sendMail({
-            from: `"HairLYF" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "Verify your email",
-            html: `<p>Click below to verify your email:</p>
-                   <a href="${verificationLink}">${verificationLink}</a>`,
-        });
-
-        return res.status(201).json({
-            message: "Verification email sent. Please check your inbox.",
-        });
-    } catch (error) {
-        return res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
-
-export const verifyEmail = async (req, res) => {
-    try {
-        const { token } = req.params;
-
-        const decoded = jwt.verify(decodeURIComponent(token), process.env.JWT_SECRET);
-        const { name, email, password, phoneNumber } = decoded;
-
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: "User already verified." });
-        }
-
-        const user = await User.create({ name, email, password, phoneNumber });
-
-        return res.status(201).json({ message: "Email verified and user registered successfully." });
-    } catch (error) {
-        return res.status(400).json({ message: "Invalid or expired token", error: error.message });
-    }
-};
+      const { name, email, password, phoneNumber } = req.body;
   
+      if (!name || !email || !password || !phoneNumber) {
+        return res.status(400).json({ message: "All fields are required." });
+      }
+  
+      if (name.trim().length < 3) {
+        return res.status(400).json({ message: "Name must be at least 3 characters." });
+      }
+  
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format." });
+      }
+  
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        return res.status(400).json({ message: "Phone number must be 10 digits." });
+      }
+  
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          message:
+            "Password must be at least 6 characters and include uppercase, lowercase, number, and special character.",
+        });
+      }
+  
+      const userExists = await User.findOne({ email });
+      if (userExists) {
+        return res.status(400).json({ message: "User already exists." });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        phoneNumber,
+        isVerified: true,
+      });
+  
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      });
+  
+      await transporter.sendMail({
+        from: `"HairLYF" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Welcome to HairLYF 🎉",
+        html: `
+          <h2>Hello ${name},</h2>
+          <p>Thank you for registering at <strong>HairLYF</strong>! 🎉</p>
+          <p>We’re excited to have you onboard.</p>
+          <br/>
+          <p>If you have any questions, feel free to reach out to our support team.</p>
+          <p>Cheers,<br/>The HairLYF Team</p>
+        `,
+      });
+  
+      return res.status(201).json({
+        message: "User registered successfully.",
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          token,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
 
 export const loginUser = async (req, res) => {
     try {

@@ -23,14 +23,41 @@ export const getProductById = async (req, res) => {
 };
 
 export const createProduct = async (req, res) => {
-    const { name, description, price, category, stock, imageUrl } = req.body;
+    const {
+        name,
+        brand,
+        description,
+        price,
+        category,
+        stock,
+        images,
+        isFeatured,
+        discountPrice,
+        discountPercentage,
+        tags,
+        variants
+    } = req.body;
 
-    if (!name || !description || !price || !category || !imageUrl) {
-        return res.status(400).json({ message: "All fields are required" });
+    if (!name || !brand || !description || !price || !category || !images || images.length === 0) {
+        return res.status(400).json({ message: "Missing required fields" });
     }
 
     try {
-        const newProduct = new Product({ name, description, price, category, stock, imageUrl });
+        const newProduct = new Product({
+            name,
+            brand,
+            description,
+            price,
+            category,
+            stock,
+            images,
+            isFeatured,
+            discountPrice,
+            discountPercentage,
+            tags,
+            variants
+        });
+
         const savedProduct = await newProduct.save();
         res.status(201).json(savedProduct);
     } catch (error) {
@@ -72,11 +99,8 @@ export const searchProduct = async (req, res) => {
 
         if (!name) return res.status(400).json({ message: "Search query is required" });
 
-        const products = await Product.find(
-            { name: { $regex: name, $options: "i" } }
-        )
-        .limit(10); 
-        console.log(products)
+        const products = await Product.find({ name: { $regex: name, $options: "i" } }).limit(10);
+
         if (!products.length) {
             return res.status(404).json({ message: "No products found" });
         }
@@ -86,18 +110,21 @@ export const searchProduct = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error", error });
     }
 };
-export const getProductByCategory=async (req,res)=> {
+
+export const getProductByCategory = async (req, res) => {
     try {
-        const {category}=req.body;
-        const products=await Product.find({category});
-        if(!products.length){
+        const { category } = req.body;
+        const products = await Product.find({ category });
+
+        if (!products.length) {
             return res.status(404).json({ message: "No products found in this category" });
         }
-        res.json(products)
+
+        res.json(products);
     } catch (error) {
         res.status(500).json({ message: "Error fetching products", error });
     }
-}
+};
 
 export const getProductsByPriceRange = async (req, res) => {
     try {
@@ -135,7 +162,7 @@ export const updateStock = async (req, res) => {
         const { id } = req.params;
         const { quantity } = req.body;
 
-        if (!quantity) {
+        if (quantity == null) {
             return res.status(400).json({ message: "Quantity is required" });
         }
 
@@ -194,4 +221,3 @@ export const getProductReviews = async (req, res) => {
         res.status(500).json({ message: "Error fetching reviews", error });
     }
 };
- 

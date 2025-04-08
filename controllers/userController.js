@@ -198,3 +198,60 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const logoutUser = async (req, res) => {
+  try {
+    res.cookie("token", "", {
+      httpOnly: true,
+      expires: new Date(0),
+      sameSite: "None", 
+      secure: true,
+    });
+
+    return res.status(200).json({ success: true, message: "Logged out successfully." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Logout failed.", error: error.message });
+  }
+};
+export const verifyOtp = async (req, res) => {
+  const { phoneNumber, otp } = req.body;
+  const user = await User.findOne({
+    phoneNumber,
+    otp,
+    otpExpire: { $gt: Date.now() },
+  });
+
+  if (!user) return res.status(400).json({ message: "Invalid or expired OTP" });
+  user.otp = undefined;
+  user.otpExpire = undefined;
+  await user.save();
+
+  const token = generateToken(user._id);
+
+  res.json({
+    message: "Login via OTP successful",
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      token,
+    },
+  });
+};
+
+export const requestOtp = async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  if (!phoneNumber) return res.status(400).json({ message: "Phone number is required" });
+
+  const user = await User.findOne({ phoneNumber });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  user.otp = otp;
+  user.otpExpire = Date.now() + 10 * 60 * 1000;
+  await user.save();
+  console.log(`OTP for ${phoneNumber}: ${otp}`);
+  res.json({ message: "OTP sent successfully" });
+};

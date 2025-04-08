@@ -3,18 +3,13 @@ import mongoose from "mongoose";
 const productSchema = mongoose.Schema(
     {
         name: { type: String, required: true },
-        brand: { type: String, required: true },
         description: { type: String, required: true },
         price: { type: Number, required: true },
-        discountPrice: { type: Number, default: 0 },
-        discountPercentage: { type: Number, default: 0 },
-        category: { type: String, required: true },
+        category: { type: String, enum: ['men', 'women'], required: true }, 
         stock: { type: Number, required: true, default: 0 },
-        sold: { type: Number, default: 0 },
-        imageUrl: { type: String, required: true },
+        images: [{ type: String, required: true }],  
         isFeatured: { type: Boolean, default: false },
         ratings: { type: Number, default: 0 },
-        tags: [{ type: String }],
         reviews: [
             {
                 userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -25,11 +20,12 @@ const productSchema = mongoose.Schema(
         ],
         variants: [
             {
-                color: { type: String },
-                size: { type: String },
-                stock: { type: Number, default: 0 }
+                color: { type: String, required: true },
+                size: { type: String, required: true },
+                stock: { type: Number, default: 0 },
+                variantPrice: { type: Number, default: 0 }
             }
-        ]
+        ],
     },
     { timestamps: true }
 );

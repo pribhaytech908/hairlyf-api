@@ -6,6 +6,9 @@ import {
   updateUserProfile,
   forgotPassword,
   resetPassword,
+  logoutUser,
+  requestOtp,
+  verifyOtp,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -149,5 +152,8 @@ router.post("/forgot-password", forgotPassword);
  *         description: Password reset successful
  */
 router.post("/reset-password", resetPassword);
+router.get("/logout", logoutUser);
 
+router.post("/login-with-otp", requestOtp);
+router.post("/verify-otp", verifyOtp);
 export default router;

@@ -79,7 +79,7 @@ router.post("/login", loginUser);
  *       200:
  *         description: User profile data
  */
-router.get("/profile", protect, getUserProfile);
+router.get("/check-auth", protect, getUserProfile);
 
 /**
  * @swagger
